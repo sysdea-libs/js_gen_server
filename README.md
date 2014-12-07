@@ -1,6 +1,6 @@
 # JSGenServer
 
-Simple Port wrapper for exposing JavaScript functions to Elixir. Arguments passed are simply encoded and decoded in JSON using [https://github.com/devinus/poison](Poison). (Mostly a placeholder as there are much more efficient transfer encodings that could be used.)
+Simple Port wrapper for exposing JavaScript functions to Elixir. Arguments passed are simply encoded and decoded in JSON using [Poison](https://github.com/devinus/poison). (Mostly a placeholder as there are much more efficient transfer encodings that could be used.)
 
 ## Status
 
