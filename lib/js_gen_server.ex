@@ -45,8 +45,8 @@ defmodule JSGenServer do
     {:noreply, %{state | waiting: Map.delete(state.waiting, parsed["counter"])}}
   end
 
-  def call(pid, arg) do
-    GenServer.call(pid, Tuple.to_list(arg))
+  def call(pid, arg, timeout \\ 5000) do
+    GenServer.call(pid, Tuple.to_list(arg), timeout)
   end
 
   def cast(pid, arg) do

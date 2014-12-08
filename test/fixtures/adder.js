@@ -13,6 +13,11 @@ var functions = {
   },
   add_state: function (x) {
     this.val += x;
+  },
+  timeout: function (x) {
+    setTimeout(function () {
+      cb(x);
+    }, x);
   }
 };
 

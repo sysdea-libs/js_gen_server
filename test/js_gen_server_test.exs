@@ -22,4 +22,9 @@ defmodule JSGenServerTest do
     assert JSGenServer.cast(pid, {:add_state, 5})
     assert JSGenServer.call(pid, {:async, 5}) == 20
   end
+
+  test "timeouts", %{pid: pid} do
+    assert {:timeout, {GenServer, :call, [pid, [:timeout, 500], 100]}}
+           = catch_exit(JSGenServer.call(pid, {:timeout, 500}, 100))
+  end
 end
