@@ -5,7 +5,7 @@ defmodule JSGenServer do
     GenServer.start_link(__MODULE__, {js_script, state}, opts)
   end
 
-  @base_cmd 'node #{:code.priv_dir(:gen_server_js)}/genserver.js '
+  @base_cmd 'node #{:code.priv_dir(:js_gen_server)}/genserver.js '
 
   def init({js_script, state}) do
     port = :erlang.open_port({:spawn, @base_cmd ++ to_char_list(js_script)}, packet: 4)
