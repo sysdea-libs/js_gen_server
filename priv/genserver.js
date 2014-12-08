@@ -1,6 +1,6 @@
-function JSGenServer(fns) {
+function JSGenServer(cls) {
   this.buffer = new Buffer([]);
-  this.fns = fns;
+  this.cls = cls;
 
   process.stdin.on('readable', function () {
     var chunk = process.stdin.read();
@@ -41,7 +41,14 @@ JSGenServer.prototype.handleMessage = function (buf) {
     process.stdout.write(Buffer.concat([len, utfresp]));
   };
 
-  this.fns[message.method].apply(null, message.args.concat([cb]));
+  if (message.type == "init") {
+    this.handler = new this.cls(message.state);
+  } else if (message.type == "handle_call") {
+    var resp = this.handler.handle_call(message.arg, cb);
+    if (resp != undefined) {
+      cb(resp);
+    }
+  }
 };
 
 var reader = new JSGenServer(require(process.argv[2]));
