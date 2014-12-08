@@ -26,25 +26,34 @@ JSGenServer.prototype.try_read = function () {
 JSGenServer.prototype.handleMessage = function (buf) {
   var message = JSON.parse(buf.toString('utf-8'));
 
-  var cb = function (result) {
-    var response = JSON.stringify({ counter: message.counter,
-                                    response: result });
+  switch (message.type) {
+    case "init":
+      this.handler = new this.cls(message.state);
+      break;
+    case "call":
+      if (!this.handler.handle_call) return;
+      var cb = function (result) {
+        var response = JSON.stringify({ counter: message.counter,
+                                        response: result });
 
-    var utfresp = new Buffer(response, 'utf-8');
+        var utfresp = new Buffer(response, 'utf-8');
 
-    var len = new Buffer(4);
-    len.writeInt32BE(utfresp.length, 0);
+        var len = new Buffer(4);
+        len.writeInt32BE(utfresp.length, 0);
 
-    process.stdout.write(Buffer.concat([len, utfresp]));
-  };
+        process.stdout.write(Buffer.concat([len, utfresp]));
+      };
 
-  if (message.type == "init") {
-    this.handler = new this.cls(message.state);
-  } else if (message.type == "handle_call") {
-    var resp = this.handler.handle_call(message.arg, cb);
-    if (resp != undefined) {
-      cb(resp);
-    }
+      var resp = this.handler.handle_call(message.arg, cb);
+      if (resp != undefined) {
+        cb(resp);
+      }
+
+      break;
+    case "cast":
+      if (!this.handler.handle_cast) return;
+      this.handler.handle_cast(message.arg);
+      break;
   }
 };
 

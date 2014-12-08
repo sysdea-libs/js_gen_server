@@ -22,12 +22,20 @@ defmodule JSGenServer do
 
   def handle_call(arg, from, state) do
     :erlang.port_command(state.port,
-                         Poison.Encoder.encode(%{type: "handle_call",
+                         Poison.Encoder.encode(%{type: "call",
                                                  arg: arg,
                                                  counter: state.counter}, []))
 
     {:noreply, %{state | waiting: Map.put(state.waiting, state.counter, from),
                          counter: state.counter + 1}}
+  end
+
+  def handle_cast(arg, state) do
+    :erlang.port_command(state.port,
+                         Poison.Encoder.encode(%{type: "cast",
+                                                 arg: arg}, []))
+
+    {:noreply, state}
   end
 
   def handle_info({_pid, {:data, msg}}, state) do
@@ -39,5 +47,9 @@ defmodule JSGenServer do
 
   def call(pid, arg) do
     GenServer.call(pid, Tuple.to_list(arg))
+  end
+
+  def cast(pid, arg) do
+    GenServer.cast(pid, Tuple.to_list(arg))
   end
 end

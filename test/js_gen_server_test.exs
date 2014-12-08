@@ -16,4 +16,10 @@ defmodule JSGenServerTest do
   test "named servers" do
     assert JSGenServer.call(Adder, {:add, Enum.to_list(1..4)}) == 10
   end
+
+  test "casts", %{pid: pid} do
+    assert JSGenServer.call(pid, {:async, 5}) == 15
+    assert JSGenServer.cast(pid, {:add_state, 5})
+    assert JSGenServer.call(pid, {:async, 5}) == 20
+  end
 end
