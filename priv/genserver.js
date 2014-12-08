@@ -5,17 +5,14 @@ function JSGenServer(cls) {
   process.stdin.on('readable', function () {
     var chunk = process.stdin.read();
     if (chunk) {
-      reader.data(chunk);
+      this.buffer = Buffer.concat([this.buffer, chunk]);
+      this.try_read();
     }
-  });
+  }.bind(this));
 
   process.stdin.on('end', function () {
     process.exit();
   });
-};
-JSGenServer.prototype.data = function (chunk) {
-  this.buffer = Buffer.concat([this.buffer, chunk]);
-  this.try_read();
 };
 JSGenServer.prototype.try_read = function () {
   if (this.buffer.length < 4) return;
@@ -51,4 +48,4 @@ JSGenServer.prototype.handleMessage = function (buf) {
   }
 };
 
-var reader = new JSGenServer(require(process.argv[2]));
+new JSGenServer(require(process.argv[2]));
