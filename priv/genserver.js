@@ -1,14 +1,31 @@
 function JSGenServer(cls) {
+  var me = this;
+
   this.buffer = new Buffer([]);
   this.cls = cls;
+
+  cls.prototype.log = {
+    error: function (message) {
+      me.sendMessage({type: "log", level: "error", message: message});
+    },
+    warn: function (message) {
+      me.sendMessage({type: "log", level: "warn", message: message});
+    },
+    debug: function (message) {
+      me.sendMessage({type: "log", level: "debug", message: message});
+    },
+    info: function (message) {
+      me.sendMessage({type: "log", level: "info", message: message});
+    }
+  };
 
   process.stdin.on('readable', function () {
     var chunk = process.stdin.read();
     if (chunk) {
-      this.buffer = Buffer.concat([this.buffer, chunk]);
-      this.try_read();
+      me.buffer = Buffer.concat([me.buffer, chunk]);
+      me.try_read();
     }
-  }.bind(this));
+  });
 
   process.stdin.on('end', function () {
     process.exit();
@@ -23,26 +40,30 @@ JSGenServer.prototype.try_read = function () {
     this.try_read();
   }
 };
+JSGenServer.prototype.sendMessage = function (json) {
+  var response = JSON.stringify(json);
+
+  var utfresp = new Buffer(response, 'utf-8');
+
+  var len = new Buffer(4);
+  len.writeInt32BE(utfresp.length, 0);
+
+  process.stdout.write(Buffer.concat([len, utfresp]));
+};
 JSGenServer.prototype.handleMessage = function (buf) {
   var message = JSON.parse(buf.toString('utf-8'));
 
   switch (message.type) {
     case "init":
-      this.handler = new this.cls(message.state);
+      this.handler = new this.cls(message.state, this.logger);
       break;
     case "call":
       if (!this.handler.handle_call) return;
       var cb = function (result) {
-        var response = JSON.stringify({ counter: message.counter,
-                                        response: result });
-
-        var utfresp = new Buffer(response, 'utf-8');
-
-        var len = new Buffer(4);
-        len.writeInt32BE(utfresp.length, 0);
-
-        process.stdout.write(Buffer.concat([len, utfresp]));
-      };
+        this.sendMessage({ type: "response",
+                           counter: message.counter,
+                           response: result });
+      }.bind(this);
 
       var resp = this.handler.handle_call(message.arg, cb);
       if (resp != undefined) {

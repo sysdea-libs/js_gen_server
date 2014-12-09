@@ -1,5 +1,6 @@
 defmodule JSGenServer do
   use GenServer
+  require Logger
 
   def start_link(js_script, state, opts \\ []) do
     GenServer.start_link(__MODULE__, {js_script, state}, opts)
@@ -39,9 +40,13 @@ defmodule JSGenServer do
   end
 
   def handle_info({port, {:data, msg}}, %{port: port}=state) do
-    parsed = Poison.decode!(msg)
-    GenServer.reply Map.get(state.waiting, parsed["counter"]), parsed["response"]
-
-    {:noreply, %{state | waiting: Map.delete(state.waiting, parsed["counter"])}}
+    case Poison.decode!(msg) do
+      %{"type" => "log", "level" => level, "message" => message} ->
+        Logger.log(String.to_atom(level), message)
+        {:noreply, state}
+      %{"type" => "response", "counter" => counter, "response" => response } ->
+        GenServer.reply Map.get(state.waiting, counter), response
+        {:noreply, %{state | waiting: Map.delete(state.waiting, counter)}}
+    end
   end
 end
