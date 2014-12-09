@@ -51,3 +51,5 @@ GenServer.call(Adder, {:async, 5})
 
 - [ ] Failure handling
 - [ ] More efficient transfer encoding
+- [ ] Run user JS Server inside child_process to avoid stdin/stdout issues (and allow auto-piping child output into the log)
+- [ ] `use JSGenServer, path: "..."` vs `JSGenServer.start_link("...")`? Former may be cleaner for workers, and allow experimenting with exposing the Elixir side to the JS Server as well.
