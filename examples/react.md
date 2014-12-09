@@ -27,5 +27,5 @@ Server.prototype.handle_call = function (args, cb) {
 {:ok, _} = JSGenServer.start_link([Path.join([__DIR__, "../priv/react_renderer.js"]), %{}],
                                   name: ReactRenderer)
 
-GenServer.call(ReactRenderer, {:component, %{user: %{forename: "Chris"}}})
+GenServer.call(ReactRenderer, {"component", %{user: %{forename: "Chris"}}})
 ```
