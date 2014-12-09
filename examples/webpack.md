@@ -5,7 +5,6 @@ This simple server allows to easily add webpack compilers into the supervision t
 ```javascript
 // webpack_watcher.js
 var webpack = require('webpack');
-var fs = require('fs');
 var path = require('path');
 
 function Server(state) {
