@@ -2,6 +2,22 @@ defmodule JSGenServer do
   use GenServer
   require Logger
 
+  defmacro __using__(opts) do
+    quote do
+      def start_link(state, opts \\ []) do
+        GenServer.start_link(__MODULE__,
+          {Path.join([__DIR__, unquote(opts[:path])]), state}, opts)
+      end
+
+      def init(arg), do: JSGenServer.init(arg)
+      def handle_call(arg, from, state), do: JSGenServer.handle_call(arg, from, state)
+      def handle_cast(arg, state), do: JSGenServer.handle_call(arg, state)
+      def handle_info({port, {:data, msg}}=arg, %{port: port}=state) do
+        JSGenServer.handle_info(arg, state)
+      end
+    end
+  end
+
   def start_link(js_script, state, opts \\ []) do
     GenServer.start_link(__MODULE__, {js_script, state}, opts)
   end

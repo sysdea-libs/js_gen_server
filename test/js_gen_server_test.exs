@@ -1,3 +1,7 @@
+defmodule JSGenServerTest.TestServer do
+  use JSGenServer, path: "/fixtures/adder.js"
+end
+
 defmodule JSGenServerTest do
   use ExUnit.Case
 
@@ -15,6 +19,12 @@ defmodule JSGenServerTest do
 
   test "named servers" do
     assert GenServer.call(Adder, {:add, Enum.to_list(1..4)}) == 10
+  end
+
+  test "using syntax" do
+    {:ok, pid} = JSGenServerTest.TestServer.start_link(%{val: 15})
+    assert GenServer.call(pid, {:add, Enum.to_list(1..4)}) == 10
+    assert GenServer.call(pid, {:async, 5}) == 20
   end
 
   test "casts", %{pid: pid} do
