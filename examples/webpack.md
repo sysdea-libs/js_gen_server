@@ -31,6 +31,5 @@ module.exports = Server;
 
 ```elixir
 JSGenServer.start_link([Path.join([__DIR__, "../priv/webpack_watcher.js"]),
-                       %{config_path: Path.join([__DIR__, "../priv/webpack.config.js"])}],
-                       [id: :webpack_compiler])
+                       %{config_path: Path.join([__DIR__, "../priv/webpack.config.js"])}])
 ```
