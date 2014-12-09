@@ -1,6 +1,6 @@
 # Webpack Watcher
 
-This simple server allows to easily add supervised webpack compilers into the supervision tree, with some basic logging on compile to :info.
+This simple server allows to easily add webpack compilers into the supervision tree, with some basic logging on compile to :info.
 
 ```javascript
 // webpack_watcher.js
