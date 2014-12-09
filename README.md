@@ -39,11 +39,11 @@ module.exports = Server;
 
 ```elixir
 {:ok, pid} = JSGenServer.start_link(Path.join([__DIR__, "/adder.js"]), %{val: 10}, name: Adder)
-JSGenServer.call(pid, {:add, Enum.to_list(1..4)})
+GenServer.call(pid, {:add, Enum.to_list(1..4)})
 # => 10
-JSGenServer.call(pid, {:twoarg, 6, 7})
+GenServer.call(pid, {:twoarg, 6, 7})
 # => 42
-JSGenServer.call(Adder, {:async, 5})
+GenServer.call(Adder, {:async, 5})
 # => 15
 ```
 
