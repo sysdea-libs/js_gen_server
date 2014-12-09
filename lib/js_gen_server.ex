@@ -9,7 +9,8 @@ defmodule JSGenServer do
   @base_cmd 'node #{:code.priv_dir(:js_gen_server)}/genserver.js '
 
   def init({js_script, state}) do
-    port = :erlang.open_port({:spawn, @base_cmd ++ to_char_list(js_script)}, packet: 4)
+    port = :erlang.open_port({:spawn, @base_cmd ++ to_char_list(js_script)},
+                             [{:packet, 4}, :nouse_stdio])
 
     :erlang.port_command(port,
                          Poison.Encoder.encode(%{type: "init",

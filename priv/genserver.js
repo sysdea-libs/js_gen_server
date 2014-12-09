@@ -1,8 +1,13 @@
+var fs = require('fs');
+
 function JSGenServer(cls) {
   var me = this;
 
-  this.buffer = new Buffer([]);
-  this.cls = cls;
+  me.istream = fs.createReadStream(null, {fd: 3});
+  me.ostream = fs.createWriteStream(null, {fd: 4});
+
+  me.buffer = new Buffer([]);
+  me.cls = cls;
 
   cls.prototype.log = {
     error: function (message) {
@@ -19,15 +24,15 @@ function JSGenServer(cls) {
     }
   };
 
-  process.stdin.on('readable', function () {
-    var chunk = process.stdin.read();
+  me.istream.on('readable', function () {
+    var chunk = me.istream.read();
     if (chunk) {
       me.buffer = Buffer.concat([me.buffer, chunk]);
       me.try_read();
     }
   });
 
-  process.stdin.on('end', function () {
+  me.istream.on('end', function () {
     process.exit();
   });
 };
@@ -48,7 +53,7 @@ JSGenServer.prototype.sendMessage = function (json) {
   var len = new Buffer(4);
   len.writeInt32BE(utfresp.length, 0);
 
-  process.stdout.write(Buffer.concat([len, utfresp]));
+  this.ostream.write(Buffer.concat([len, utfresp]));
 };
 JSGenServer.prototype.handleMessage = function (buf) {
   var message = JSON.parse(buf.toString('utf-8'));
