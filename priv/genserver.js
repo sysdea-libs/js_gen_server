@@ -1,5 +1,24 @@
 var fs = require('fs');
 
+var Module = function (server) {
+  this.server = server;
+};
+Module.prototype.error = function (message) {
+  this.server.sendMessage({type: "log", level: "error", message: message});
+};
+Module.prototype.warn = function (message) {
+  this.server.sendMessage({type: "log", level: "warn", message: message});
+};
+Module.prototype.debug = function (message) {
+  this.server.sendMessage({type: "log", level: "debug", message: message});
+};
+Module.prototype.info = function (message) {
+  this.server.sendMessage({type: "log", level: "info", message: message});
+};
+Module.prototype.call = function (name, args, cb) {
+  return this.server.call(name, args, cb);
+};
+
 function JSGenServer(cls) {
   var me = this;
 
@@ -10,23 +29,6 @@ function JSGenServer(cls) {
   me.cls = cls;
   me.waiting = {};
   me.counter = 1;
-
-  cls.prototype.log = {
-    error: function (message) {
-      me.sendMessage({type: "log", level: "error", message: message});
-    },
-    warn: function (message) {
-      me.sendMessage({type: "log", level: "warn", message: message});
-    },
-    debug: function (message) {
-      me.sendMessage({type: "log", level: "debug", message: message});
-    },
-    info: function (message) {
-      me.sendMessage({type: "log", level: "info", message: message});
-    }
-  };
-
-  cls.prototype.call = this.call.bind(this);
 
   me.istream.on('readable', function () {
     var chunk = me.istream.read();
@@ -68,30 +70,44 @@ JSGenServer.prototype.call = function (name, args, cb) {
                      args: args,
                      counter: counter });
 };
+
+var empty_fn = function () {};
+empty_fn.NOOP = true;
 JSGenServer.prototype.handleMessage = function (buf) {
   var message = JSON.parse(buf.toString('utf-8'));
 
   switch (message.type) {
     case "init":
-      this.handler = new this.cls(message.state, this.logger);
+      this.handler = new this.cls(message.state, new Module(this));
       break;
     case "call":
-      if (!this.handler.handle_call) return;
       var cb = function (result) {
         this.sendMessage({ type: "response",
                            counter: message.counter,
                            response: result });
       }.bind(this);
 
-      var resp = this.handler.handle_call(message.arg, cb);
-      if (resp != undefined) {
-        cb(resp);
+      if (this.handler.handle_call) {
+        var resp = this.handler.handle_call(message.arg, cb);
+      } else {
+        var args = message.arg;
+        var fn = this.handler[args[0]];
+        if (!fn) return; // todo: error propagation
+        var resp = fn.apply(this.handler, args.slice(1).concat([cb]));
       }
+
+      if (resp != undefined) cb(resp);
 
       break;
     case "cast":
-      if (!this.handler.handle_cast) return;
-      this.handler.handle_cast(message.arg);
+      if (this.handler.handle_cast) {
+        this.handler.handle_cast(message.arg);
+      } else {
+        var args = message.arg;
+        var fn = this.handler[args[0]];
+        if (!fn) return; // todo: error propagation
+        fn.apply(this.handler, args.slice(1).concat([empty_fn]));
+      }
       break;
     case "response":
       if (!this.waiting[message.counter]) return;

@@ -11,27 +11,20 @@ Early prototype/proof of concept.
 ```javascript
 // adder.js
 
-var functions = {
-  add: function (args) {
-    return args.reduce(function (a, b) { return a + b });
-  },
-  twoarg: function (a, b) {
-    return a * b;
-  },
-  async: function (a, cb) {
-    var state = this;
-    setTimeout(function () {
-      cb(a + state.val);
-    }, 100);
-  }
-};
-
-function Server(state) {
+function Server(state, module) {
   this.state = state;
+  this.module = module;
 };
-// Convert ["fn", 4, 5] to functions.fn.apply(state, [4, 5, from])
-Server.prototype.handle_call = function (args, from) {
-  return functions[args[0]].apply(this.state, args.slice(1).concat([from]));
+Server.prototype.add = function (args) {
+  return args.reduce(function (a, b) { return a + b });
+};
+Server.prototype.twoarg = function (a, b) {
+  return a * b;
+};
+Server.prototype.async = function (a, cb) {
+  setTimeout(function () {
+    cb(a + this.state.val);
+  }.bind(this), 100);
 };
 
 module.exports = Server;

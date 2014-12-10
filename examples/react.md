@@ -14,15 +14,15 @@ var templates = {
   component: MyComponent
 };
 
-function Server(state) {
+function Server(state, module) {
   this.state = state;
+  this.module = module;
 };
-// Convert ["component", props] to React.createElement(MyComponent, props), then render
-Server.prototype.handle_call = function (args, cb) {
-  this.log.debug("Rendering React component " + args[0]);
-  var component = React.createElement(components[args[0]], args[1]);
+Server.prototype.component = function (component_name, state) {
+  this.module.debug("Rendering React component " + args[0]);
+  var component = React.createElement(components[component_name], state);
   return React.renderToString(component);
-};
+}
 ```
 
 ```elixir
