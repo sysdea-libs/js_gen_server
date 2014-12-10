@@ -7,23 +7,21 @@ This simple server allows to easily add webpack compilers into the supervision t
 var webpack = require('webpack');
 var path = require('path');
 
-function Server(state) {
-  this.state = state;
-
+function Server(state, module) {
   process.chdir(path.dirname(state.config_path));
 
-  this.state.config = require(state.config_path);
+  var config = require(state.config_path);
 
-  this.compiler = webpack(this.state.config);
+  var compiler = webpack(this.state.config);
 
-  this.compiler.watch(200, function (err, stats) {
-    this.log.info(stats.toString({
+  compiler.watch(200, function (err, stats) {
+    module.info(stats.toString({
       hash: false,
       version: false,
       assets: true,
       chunks: false
     }));
-  }.bind(this));
+  });
 };
 
 module.exports = Server;
@@ -32,6 +30,11 @@ module.exports = Server;
 ```elixir
 defmodule WebpackWatcher do
   use JSGenServer, path: "../priv/webpack_watcher.js"
+  require Logger
+
+  def info(message) do
+    Logger.info(message)
+  end
 end
 
 WebpackWatcher.start_link(%{config_path: Path.join([__DIR__, "../priv/webpack.config.js"])})

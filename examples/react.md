@@ -18,11 +18,11 @@ function Server(state, module) {
   this.state = state;
   this.module = module;
 };
-Server.prototype.component = function (component_name, state) {
-  this.module.debug("Rendering React component " + args[0]);
-  var component = React.createElement(components[component_name], state);
+Server.prototype.render = function (component_name, props) {
+  this.module.debug("Rendering React component " + component_name);
+  var component = React.createElement(components[component_name], props);
   return React.renderToString(component);
-}
+};
 ```
 
 ```elixir
@@ -37,5 +37,5 @@ end
 
 {:ok, _} = ReactRenderer.start_link(%{}, name: ReactRenderServer)
 
-GenServer.call(ReactRenderServer, {"component", %{user: %{forename: "Chris"}}})
+GenServer.call(ReactRenderServer, {:render, "component", %{user: %{forename: "Chris"}}})
 ```
