@@ -48,8 +48,7 @@ GenServer.call(Adder, {:async, 5})
 ## JS->Elixir integration
 
 ```javascript
-function Server(state, module) {
-  this.state = state;
+function Server(_state, module) {
   this.module = module;
 };
 Server.prototype.do_work = function (a, b, cb) {
@@ -74,7 +73,7 @@ defmodule WorkServer do
   end
 end
 
-WorkServer.start_link(%{val: 10}, name: Worker)
+WorkServer.start_link(%{}, name: Worker)
 GenServer.call(Worker, {:do_work, 6, 7})
 # => 42
 
