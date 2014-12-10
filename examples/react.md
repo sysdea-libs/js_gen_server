@@ -28,6 +28,11 @@ Server.prototype.component = function (component_name, state) {
 ```elixir
 defmodule ReactRenderer do
   use JSGenServer, path: "../priv/react_renderer.js"
+  require Logger
+
+  def debug(message) do
+    Logger.debug(message)
+  end
 end
 
 {:ok, _} = ReactRenderer.start_link(%{}, name: ReactRenderServer)

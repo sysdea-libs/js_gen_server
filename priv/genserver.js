@@ -33,18 +33,6 @@ var Module = function (server, fns) {
     };
   }.bind(this));
 };
-Module.prototype.error = function (message) {
-  this.server.sendMessage({type: "log", level: "error", message: message});
-};
-Module.prototype.warn = function (message) {
-  this.server.sendMessage({type: "log", level: "warn", message: message});
-};
-Module.prototype.debug = function (message) {
-  this.server.sendMessage({type: "log", level: "debug", message: message});
-};
-Module.prototype.info = function (message) {
-  this.server.sendMessage({type: "log", level: "info", message: message});
-};
 
 function JSGenServer(cls) {
   var me = this;

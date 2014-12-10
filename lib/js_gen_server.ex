@@ -1,8 +1,6 @@
 defmodule JSGenServer do
   defmacro __using__(opts) do
     quote location: :keep do
-      require Logger
-
       @before_compile JSGenServer
       @js_path unquote(opts[:path])
 
@@ -29,9 +27,6 @@ defmodule JSGenServer do
 
       def handle_info({port, {:data, msg}}, %{port: port}=state) do
         case Poison.decode!(msg) do
-          %{"type" => "log", "level" => level, "message" => message} ->
-            Logger.log(String.to_atom(level), message)
-            {:noreply, state}
           %{"type" => "response", "counter" => counter, "response" => response } ->
             GenServer.reply Map.get(state.waiting, counter), response
             {:noreply, %{state | waiting: Map.delete(state.waiting, counter)}}
