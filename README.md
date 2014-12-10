@@ -6,7 +6,7 @@ Simple Port wrapper for exposing JavaScript functions to Elixir. Arguments passe
 
 Early prototype/proof of concept.
 
-## Example
+## Basic Example
 
 ```javascript
 // adder.js
@@ -43,6 +43,41 @@ GenServer.call(pid, {:twoarg, 6, 7})
 # => 42
 GenServer.call(Adder, {:async, 5})
 # => 15
+```
+
+## JS->Elixir integration
+
+```javascript
+function Server(state, module) {
+  this.state = state;
+  this.module = module;
+};
+Server.prototype.do_work = function (a, b, cb) {
+  this.module.log("Starting work.");
+  this.module.multiply(a, b).then(function (result) {
+    cb(result);
+  });
+};
+```
+
+```elixir
+defmodule WorkServer do
+  use JSGenServer, path: "/worker.js"
+  require Logger
+
+  def multiply(a, b) do
+    a * b
+  end
+
+  def log(msg) do
+    Logger.debug(msg)
+  end
+end
+
+WorkServer.start_link(%{val: 10}, name: Worker)
+GenServer.call(Worker, {:do_work, 6, 7})
+# => 42
+
 ```
 
 # TODO
