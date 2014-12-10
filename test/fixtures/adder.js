@@ -22,7 +22,7 @@ Server.prototype.timeout = function (x) {
   }, x);
 };
 Server.prototype.call = function (a, b, cb) {
-  this.module.call('multiply', [a, b], function (c) {
+  this.module.multiply(a, b).then(function (c) {
     cb(c);
   });
 };

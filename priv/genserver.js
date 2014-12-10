@@ -1,7 +1,37 @@
 var fs = require('fs');
 
-var Module = function (server) {
-  this.server = server;
+var Promise = function () {
+  this.callbacks = [];
+  this.resolved = false;
+  this.value = null;
+}
+Promise.prototype.then = function (cb) {
+  if (this.resolved) {
+    cb(this.value);
+    return this;
+  } else {
+    this.callbacks.push(cb);
+    return this;
+  }
+};
+Promise.prototype.resolve = function (v) {
+  if (this.resolved) {
+    throw "Already Resolved";
+  }
+  this.resolved = true;
+  this.callbacks.forEach(function (cb) {
+    cb(v);
+  });
+  return this;
+};
+
+var Module = function (server, fns) {
+  fns.forEach(function (fn) {
+    this[fn] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      return server.call(fn, args);
+    };
+  }.bind(this));
 };
 Module.prototype.error = function (message) {
   this.server.sendMessage({type: "log", level: "error", message: message});
@@ -14,9 +44,6 @@ Module.prototype.debug = function (message) {
 };
 Module.prototype.info = function (message) {
   this.server.sendMessage({type: "log", level: "info", message: message});
-};
-Module.prototype.call = function (name, args, cb) {
-  return this.server.call(name, args, cb);
 };
 
 function JSGenServer(cls) {
@@ -63,12 +90,15 @@ JSGenServer.prototype.sendMessage = function (json) {
 };
 JSGenServer.prototype.call = function (name, args, cb) {
   var counter = ++this.counter;
-  this.waiting[counter] = cb;
+  var promise = new Promise();
+  this.waiting[counter] = promise;
 
   this.sendMessage({ type: "call",
                      name: name,
                      args: args,
                      counter: counter });
+
+  return promise;
 };
 
 var empty_fn = function () {};
@@ -78,7 +108,7 @@ JSGenServer.prototype.handleMessage = function (buf) {
 
   switch (message.type) {
     case "init":
-      this.handler = new this.cls(message.state, new Module(this));
+      this.handler = new this.cls(message.state, new Module(this, message.fns));
       break;
     case "call":
       var cb = function (result) {
@@ -111,7 +141,7 @@ JSGenServer.prototype.handleMessage = function (buf) {
       break;
     case "response":
       if (!this.waiting[message.counter]) return;
-      this.waiting[message.counter].call(null, message.response);
+      this.waiting[message.counter].resolve(message.response);
       delete this.waiting[message.counter];
       break;
   }
