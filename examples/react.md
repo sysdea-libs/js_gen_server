@@ -26,8 +26,11 @@ Server.prototype.handle_call = function (args, cb) {
 ```
 
 ```elixir
-{:ok, _} = JSGenServer.start_link([Path.join([__DIR__, "../priv/react_renderer.js"]), %{}],
-                                  name: ReactRenderer)
+defmodule ReactRenderer do
+  use JSGenServer, path: "../priv/react_renderer.js"
+end
 
-GenServer.call(ReactRenderer, {"component", %{user: %{forename: "Chris"}}})
+{:ok, _} = ReactRenderer.start_link(%{}, name: ReactRenderServer)
+
+GenServer.call(ReactRenderServer, {"component", %{user: %{forename: "Chris"}}})
 ```

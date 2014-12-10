@@ -30,6 +30,9 @@ module.exports = Server;
 ```
 
 ```elixir
-JSGenServer.start_link([Path.join([__DIR__, "../priv/webpack_watcher.js"]),
-                       %{config_path: Path.join([__DIR__, "../priv/webpack.config.js"])}])
+defmodule WebpackWatcher do
+  use JSGenServer, path: "../priv/webpack_watcher.js"
+end
+
+WebpackWatcher.start_link(%{config_path: Path.join([__DIR__, "../priv/webpack.config.js"])})
 ```

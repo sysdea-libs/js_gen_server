@@ -8,6 +8,8 @@ function JSGenServer(cls) {
 
   me.buffer = new Buffer([]);
   me.cls = cls;
+  me.waiting = {};
+  me.counter = 1;
 
   cls.prototype.log = {
     error: function (message) {
@@ -23,6 +25,8 @@ function JSGenServer(cls) {
       me.sendMessage({type: "log", level: "info", message: message});
     }
   };
+
+  cls.prototype.call = this.call.bind(this);
 
   me.istream.on('readable', function () {
     var chunk = me.istream.read();
@@ -55,6 +59,15 @@ JSGenServer.prototype.sendMessage = function (json) {
 
   this.ostream.write(Buffer.concat([len, utfresp]));
 };
+JSGenServer.prototype.call = function (name, args, cb) {
+  var counter = ++this.counter;
+  this.waiting[counter] = cb;
+
+  this.sendMessage({ type: "call",
+                     name: name,
+                     args: args,
+                     counter: counter });
+};
 JSGenServer.prototype.handleMessage = function (buf) {
   var message = JSON.parse(buf.toString('utf-8'));
 
@@ -79,6 +92,11 @@ JSGenServer.prototype.handleMessage = function (buf) {
     case "cast":
       if (!this.handler.handle_cast) return;
       this.handler.handle_cast(message.arg);
+      break;
+    case "response":
+      if (!this.waiting[message.counter]) return;
+      this.waiting[message.counter].call(null, message.response);
+      delete this.waiting[message.counter];
       break;
   }
 };
