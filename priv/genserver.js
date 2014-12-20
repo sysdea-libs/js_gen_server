@@ -34,14 +34,14 @@ var Module = function (server, fns) {
   }.bind(this));
 };
 
-function JSGenServer(cls) {
+function JSGenServer(cls_path) {
   var me = this;
 
   me.istream = fs.createReadStream(null, {fd: 3});
   me.ostream = fs.createWriteStream(null, {fd: 4});
 
   me.buffer = new Buffer([]);
-  me.cls = cls;
+  me.cls = require(cls_path);
   me.waiting = {};
   me.counter = 1;
 
@@ -51,6 +51,11 @@ function JSGenServer(cls) {
       me.buffer = Buffer.concat([me.buffer, chunk]);
       me.try_read();
     }
+  });
+
+  // Kill server when target js file is modified
+  fs.watch(cls_path, function (event) {
+    process.exit();
   });
 
   me.istream.on('end', function () {
@@ -135,4 +140,4 @@ JSGenServer.prototype.handleMessage = function (buf) {
   }
 };
 
-new JSGenServer(require(process.argv[2]));
+new JSGenServer(process.argv[2]);
