@@ -4,14 +4,14 @@
 // react_renderer.js
 var React = require('react');
 
-var MyComponent = React.createClass({
+var MainComponent = React.createClass({
   render: function () {
     return React.createElement('div', null, "Hello ", this.props.user.forename, "!");
   }
 });
 
-var templates = {
-  component: MyComponent
+var components = {
+  main: MainComponent
 };
 
 function Server(state, module) {
@@ -37,5 +37,5 @@ end
 
 {:ok, _} = ReactRenderer.start_link(%{}, name: ReactRenderServer)
 
-GenServer.call(ReactRenderServer, {:render, "component", %{user: %{forename: "Chris"}}})
+GenServer.call(ReactRenderServer, {:render, "main", %{user: %{forename: "Chris"}}})
 ```
