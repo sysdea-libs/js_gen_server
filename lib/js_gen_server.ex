@@ -3,6 +3,7 @@ defmodule JSGenServer do
     quote location: :keep do
       @before_compile JSGenServer
       @js_path unquote(opts[:path])
+      @executable unquote(opts[:executable]) || "node"
 
       def start_link(state, opts \\ []) do
         GenServer.start_link(__MODULE__, state, opts)
@@ -91,7 +92,7 @@ defmodule JSGenServer do
     quote location: :keep do
       def init(state) do
         module_path = Path.join([__DIR__, @js_path])
-        cmd = 'node #{:code.priv_dir(:js_gen_server)}/genserver.js #{module_path}'
+        cmd = '#{@executable} #{:code.priv_dir(:js_gen_server)}/genserver.js #{module_path}'
         port = :erlang.open_port({:spawn, cmd}, [{:packet, 4}, :nouse_stdio, :exit_status])
 
         send_command(port, %{type: "init", state: state, fns: unquote(fns)})
