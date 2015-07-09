@@ -55,7 +55,6 @@ defmodule JSGenServer do
       end
       # Other
       def handle_info(msg, state) do
-        IO.inspect({:ignored, msg, state})
         {:noreply, state}
       end
 
