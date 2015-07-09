@@ -25,6 +25,9 @@ defmodule JSGenServer do
         {:noreply, state}
       end
 
+      # Handle data message
+      # response -> return back out to waiting callers
+      # call -> initiate Elixir Task
       def handle_info({port, {:data, msg}}, %{port: port}=state) do
         case Poison.decode!(msg) do
           %{"type" => "response", "counter" => counter, "response" => response } ->
@@ -35,6 +38,10 @@ defmodule JSGenServer do
             {:noreply, %{state | tasks: Map.put(state.tasks, ref, counter)}}
         end
       end
+      def handle_info({port, {:exit_status, _status}}, %{port: port}=state) do
+        exit(:child_died)
+      end
+      # Handle returning Task initiated by JS
       def handle_info({ref, response}, state) when is_reference(ref) do
         case state.tasks[ref] do
           nil ->
@@ -46,8 +53,16 @@ defmodule JSGenServer do
             {:noreply, %{state | tasks: Map.delete(state.tasks, ref)}}
         end
       end
-      def handle_info(_msg, state) do
+      # Other
+      def handle_info(msg, state) do
+        IO.inspect({:ignored, msg, state})
         {:noreply, state}
+      end
+
+      # Clean up port on terminate
+      def terminate(:child_died, _state) do end
+      def terminate(_reason, %{port: port}=state) do
+        :erlang.port_close(port)
       end
     end
   end
@@ -78,7 +93,7 @@ defmodule JSGenServer do
       def init(state) do
         module_path = Path.join([__DIR__, @js_path])
         cmd = 'node #{:code.priv_dir(:js_gen_server)}/genserver.js #{module_path}'
-        port = :erlang.open_port({:spawn, cmd}, [{:packet, 4}, :nouse_stdio])
+        port = :erlang.open_port({:spawn, cmd}, [{:packet, 4}, :nouse_stdio, :exit_status])
 
         send_command(port, %{type: "init", state: state, fns: unquote(fns)})
 
